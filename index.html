@@ -3,85 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Streamflix</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#e50914">
+    <title>Streamflix - Live Streaming App</title>
+    <!-- Load HLS.js library for full .m3u8 streaming support -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #141414; color: #ffffff; padding-bottom: 40px; }
-        header { background: #000; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e50914; }
-        header h1 { color: #e50914; font-size: 24px; font-weight: bold; letter-spacing: 1px; }
-        .sub-btn { background: #e50914; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; font-size: 14px; cursor: pointer; }
-        .hero { padding: 20px; text-align: center; background: linear-gradient(to bottom, #1f1f1f, #141414); }
-        .hero h2 { font-size: 22px; margin-bottom: 8px; }
-        .hero p { color: #b3b3b3; font-size: 14px; margin-bottom: 15px; }
-        .player-container { width: 100%; max-width: 600px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.7); }
-        video { width: 100%; display: block; background: #000; }
-        .video-info { padding: 15px; text-align: left; }
-        .video-info h3 { font-size: 18px; margin-bottom: 5px; }
-        .badge { display: inline-block; background: #333; color: #ffcc00; font-size: 11px; padding: 3px 8px; border-radius: 4px; margin-bottom: 10px; font-weight: bold; }
-        .action-area { padding: 20px; text-align: center; }
-        .watch-btn { background: #e50914; color: white; border: none; width: 100%; max-width: 400px; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-        .watch-btn:active { opacity: 0.8; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; padding: 20px; }
-        .modal-content { background: #222; padding: 25px; border-radius: 8px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #444; }
-        .modal-content h3 { margin-bottom: 15px; color: #fff; }
-        .modal-content p { color: #aaa; font-size: 13px; margin-bottom: 20px; line-height: 1.4; }
-        .modal-btn { background: #e50914; color: white; border: none; width: 100%; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-        .close-btn { background: transparent; color: #aaa; border: none; cursor: pointer; font-size: 14px; }
+        :root {
+            --bg-color: #0b0b0e;
+            --surface-color: #16161c;
+            --accent-color: #e50914;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --radius: 8px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding-bottom: 40px;
+        }
+
+        nav {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px;
+            background: rgba(11,11,14,0.95);
+            z-index: 1000;
+        }
+
+        .logo { font-size: 1.3rem; font-weight: 800; color: var(--accent-color); }
+        .app-badge { background: rgba(229, 9, 20, 0.2); color: var(--accent-color); font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 700; border: 1px solid rgba(229,9,20,0.3); }
+
+        .main-layout { padding-top: 80px; }
+
+        /* Video Player Stage */
+        .player-stage {
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto 20px auto;
+            background: #000;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        video {
+            width: 100%;
+            aspect-ratio: 16/9;
+            display: block;
+        }
+
+        .player-info {
+            padding: 16px;
+            background: var(--surface-color);
+        }
+
+        .player-info h2 { font-size: 1.1rem; margin-bottom: 4px; }
+        .player-info p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+
+        /* Content Rows */
+        .content-section { padding: 16px 24px; }
+        .section-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; }
+
+        .media-scroller {
+            display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px;
+            scrollbar-width: none;
+        }
+        .media-scroller::-webkit-scrollbar { display: none; }
+
+        .media-card {
+            flex: 0 0 130px;
+            height: 190px;
+            background-color: var(--surface-color);
+            border-radius: var(--radius);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .media-card:hover { transform: scale(1.05); border-color: var(--accent-color); }
+
+        .media-card img { width: 100%; height: 100%; object-fit: cover; }
+
+        .card-info {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 8px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        }
+        .card-info h4 { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-info span { font-size: 0.65rem; color: var(--text-muted); }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>STREAMFLIX</h1>
-        <button class="sub-btn" onclick="openModal()">Go Premium</button>
-    </header>
+    <nav>
+        <div class="logo">STREAMFLIX</div>
+        <span class="app-badge">HLS Streamer</span>
+    </nav>
 
-    <div class="hero">
-        <h2>Featured Release</h2>
-        <p>Stream top movies and series instantly.</p>
-    </div>
-
-    <div class="player-container">
-        <video controls poster="https://via.placeholder.com/600x340/111/fff?text=Streamflix+Preview">
-            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-            Your browser does not support video playback.
-        </video>
-        <div class="video-info">
-            <span class="badge">FREE WITH 1 AD</span>
-            <h3>Big Buck Bunny (Sample Stream)</h3>
-            <p style="color: #999; font-size: 13px;">Action / Animation • 10m</p>
+    <div class="main-layout">
+        <!-- Active Video Player Stage -->
+        <div class="player-stage">
+            <video id="videoPlayer" controls autoplay></video>
+            <div class="player-info">
+                <h2 id="videoTitle">Select a Stream</h2>
+                <p id="videoDesc">Tap any card below to start full streaming playback.</p>
+            </div>
         </div>
-    </div>
 
-    <div class="action-area">
-        <button class="watch-btn" onclick="playWithAd()">Watch Full Episode (Free + 1 Ad)</button>
-    </div>
+        <!-- Row: Full Streams & Public Playlists -->
+        <section class="content-section">
+            <h3 class="section-title">Full Movies & Continuous Streams</h3>
+            <div class="media-scroller">
+                <!-- Channel / Movie 1 (Big Buck Bunny HLS Stream Example) -->
+                <div class="media-card" onclick="loadStream('Big Buck Bunny (HD Stream)', 'Full open-source animation feature streaming via HLS.', 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=600&auto=format&fit=crop')">
+                    <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=400&auto=format&fit=crop" alt="Big Buck Bunny">
+                    <div class="card-info">
+                        <h4>Big Buck Bunny</h4>
+                        <span>Full Movie</span>
+                    </div>
+                </div>
 
-    <!-- Subscription / Ad Simulation Modal -->
-    <div id="subModal" class="modal">
-        <div class="modal-content">
-            <h3>Unlock Ad-Free Streaming</h3>
-            <p>Enjoy uninterrupted streaming, offline downloads, and zero ads for a low monthly fee.</p>
-            <button class="modal-btn" onclick="alert('Redirecting to secure checkout...')">Subscribe for ₦500/mo</button>
-            <button class="close-btn" onclick="closeModal()">Close</button>
-        </div>
+                <!-- Channel / Movie 2 -->
+                <div class="media-card" onclick="loadStream('Tears of Steel (Sci-Fi Feature)', 'Full-length open sci-fi movie stream.', 'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8', 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=600&auto=format&fit=crop')">
+                    <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=400&auto=format&fit=crop" alt="Tears of Steel">
+                    <div class="card-info">
+                        <h4>Tears of Steel</h4>
+                        <span>Sci-Fi Feature</span>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
     <script>
-        function playWithAd() {
-            alert("Ad Playing: Non-intrusive sponsor message. Your video will start right after!");
-        }
-        function openModal() {
-            document.getElementById('subModal').style.display = 'flex';
-        }
-        function closeModal() {
-            document.getElementById('subModal').style.display = 'none';
-        }
-    <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/pwabuilder-sw.js');
+        // Global HLS handler function
+        function loadStream(title, description, streamUrl, posterUrl) {
+            const video = document.getElementById('videoPlayer');
+            document.getElementById('videoTitle').innerText = title;
+            document.getElementById('videoDesc').innerText = description;
+            video.poster = posterUrl;
 
+            // Check if browser supports HLS natively (like Safari)
+            if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = streamUrl;
+                video.addEventListener('loadedmetadata', function() {
+                    video.play();
+                });
+            } 
+            // Otherwise, use HLS.js to parse and stream the .m3u8 file
+            else if (Hls.isSupported()) {
+                if (window.hls) {
+                    window.hls.destroy(); // Destroy previous stream instance if active
+                }
+                const hls = new Hls();
+                window.hls = hls;
+                hls.loadSource(streamUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    video.play();
+                });
+            } else {
+                alert('Your browser does not support HLS streaming.');
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Auto-load the first stream on startup
+        window.onload = function() {
+            loadStream('Big Buck Bunny (HD Stream)', 'Full open-source animation feature streaming via HLS.', 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=600&auto=format&fit=crop');
+        };
+    </script>
 </body>
 </html>
