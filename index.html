@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streamflix</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e50914">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #141414; color: #ffffff; padding-bottom: 40px; }
+        header { background: #000; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e50914; }
+        header h1 { color: #e50914; font-size: 24px; font-weight: bold; letter-spacing: 1px; }
+        .sub-btn { background: #e50914; color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; font-size: 14px; cursor: pointer; }
+        .hero { padding: 20px; text-align: center; background: linear-gradient(to bottom, #1f1f1f, #141414); }
+        .hero h2 { font-size: 22px; margin-bottom: 8px; }
+        .hero p { color: #b3b3b3; font-size: 14px; margin-bottom: 15px; }
+        .player-container { width: 100%; max-width: 600px; margin: 0 auto; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.7); }
+        video { width: 100%; display: block; background: #000; }
+        .video-info { padding: 15px; text-align: left; }
+        .video-info h3 { font-size: 18px; margin-bottom: 5px; }
+        .badge { display: inline-block; background: #333; color: #ffcc00; font-size: 11px; padding: 3px 8px; border-radius: 4px; margin-bottom: 10px; font-weight: bold; }
+        .action-area { padding: 20px; text-align: center; }
+        .watch-btn { background: #e50914; color: white; border: none; width: 100%; max-width: 400px; padding: 12px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .watch-btn:active { opacity: 0.8; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: #222; padding: 25px; border-radius: 8px; width: 100%; max-width: 350px; text-align: center; border: 1px solid #444; }
+        .modal-content h3 { margin-bottom: 15px; color: #fff; }
+        .modal-content p { color: #aaa; font-size: 13px; margin-bottom: 20px; line-height: 1.4; }
+        .modal-btn { background: #e50914; color: white; border: none; width: 100%; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .close-btn { background: transparent; color: #aaa; border: none; cursor: pointer; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>STREAMFLIX</h1>
+        <button class="sub-btn" onclick="openModal()">Go Premium</button>
+    </header>
+
+    <div class="hero">
+        <h2>Featured Release</h2>
+        <p>Stream top movies and series instantly.</p>
+    </div>
+
+    <div class="player-container">
+        <video controls poster="https://via.placeholder.com/600x340/111/fff?text=Streamflix+Preview">
+            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+            Your browser does not support video playback.
+        </video>
+        <div class="video-info">
+            <span class="badge">FREE WITH 1 AD</span>
+            <h3>Big Buck Bunny (Sample Stream)</h3>
+            <p style="color: #999; font-size: 13px;">Action / Animation • 10m</p>
+        </div>
+    </div>
+
+    <div class="action-area">
+        <button class="watch-btn" onclick="playWithAd()">Watch Full Episode (Free + 1 Ad)</button>
+    </div>
+
+    <!-- Subscription / Ad Simulation Modal -->
+    <div id="subModal" class="modal">
+        <div class="modal-content">
+            <h3>Unlock Ad-Free Streaming</h3>
+            <p>Enjoy uninterrupted streaming, offline downloads, and zero ads for a low monthly fee.</p>
+            <button class="modal-btn" onclick="alert('Redirecting to secure checkout...')">Subscribe for ₦500/mo</button>
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        function playWithAd() {
+            alert("Ad Playing: Non-intrusive sponsor message. Your video will start right after!");
+        }
+        function openModal() {
+            document.getElementById('subModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('subModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
