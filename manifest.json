@@ -1,12 +1,17 @@
 {
   "name": "Streamflix",
-  "short_name": "Streamflix",
-  "start_url": "./index.html",
-  "scope": "./",
+  "short_name": "SMF",
+  "description": "Your ultimate streaming destination for movies and shows.",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#e50914",
   "orientation": "portrait",
+  "id": "/",
+  "categories": [
+    "entertainment",
+    "video"
+  ],
   "icons": [
     {
       "src": "https://raw.githubusercontent.com/kevinmorgan2949-dev/Streamflix/main/icon-192.png",
@@ -20,5 +25,14 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "https://raw.githubusercontent.com/kevinmorgan2949-dev/Streamflix/main/screenshot-narrow.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow"
+    } 
+      ]
 }
+
