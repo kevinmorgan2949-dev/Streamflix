@@ -3,182 +3,535 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Streamflix - Live Streaming App</title>
-    <!-- Load HLS.js library for full .m3u8 streaming support -->
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <title>Apex Global Pro - Institutional Trading Terminal</title>
     <style>
         :root {
-            --bg-color: #0b0b0e;
-            --surface-color: #16161c;
-            --accent-color: #e50914;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --radius: 8px;
+            --bg-base: #060911;
+            --bg-surface: #0f172a;
+            --bg-card: #141f36;
+            --border-color: #1e293b;
+            --border-focus: #334155;
+            --accent-primary: #2563eb;
+            --accent-hover: #1d4ed8;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --radius-sm: 6px;
+            --radius-md: 10px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-base);
             color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding-bottom: 40px;
-        }
-
-        nav {
-            position: fixed;
-            top: 0; left: 0; width: 100%;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 16px 24px;
-            background: rgba(11,11,14,0.95);
-            z-index: 1000;
-        }
-
-        .logo { font-size: 1.3rem; font-weight: 800; color: var(--accent-color); }
-        .app-badge { background: rgba(229, 9, 20, 0.2); color: var(--accent-color); font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 700; border: 1px solid rgba(229,9,20,0.3); }
-
-        .main-layout { padding-top: 80px; }
-
-        /* Video Player Stage */
-        .player-stage {
-            width: 100%;
-            max-width: 700px;
-            margin: 0 auto 20px auto;
-            background: #000;
-            border-radius: var(--radius);
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        video {
-            width: 100%;
-            aspect-ratio: 16/9;
-            display: block;
-        }
-
-        .player-info {
             padding: 16px;
-            background: var(--surface-color);
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        .player-info h2 { font-size: 1.1rem; margin-bottom: 4px; }
-        .player-info p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
-
-        /* Content Rows */
-        .content-section { padding: 16px 24px; }
-        .section-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; }
-
-        .media-scroller {
-            display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px;
-            scrollbar-width: none;
+        /* Pro Authentication Screen */
+        #authContainer {
+            display: flex; justify-content: center; align-items: center; min-height: 90vh;
         }
-        .media-scroller::-webkit-scrollbar { display: none; }
-
-        .media-card {
-            flex: 0 0 130px;
-            height: 190px;
-            background-color: var(--surface-color);
-            border-radius: var(--radius);
-            overflow: hidden;
-            position: relative;
-            cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: transform 0.2s;
+        .auth-panel {
+            background: var(--bg-surface); width: 100%; max-width: 440px; padding: 32px;
+            border-radius: var(--radius-md); border: 1px solid var(--border-color);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
         }
+        .terminal-logo { font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; color: var(--text-main); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .terminal-logo span { color: var(--accent-primary); }
+        .auth-subtitle { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 24px; }
 
-        .media-card:hover { transform: scale(1.05); border-color: var(--accent-color); }
+        .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg-base); padding: 4px; border-radius: var(--radius-sm); margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .auth-tab-btn { background: transparent; border: none; color: var(--text-muted); padding: 8px; font-size: 0.8rem; font-weight: 600; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+        .auth-tab-btn.active { background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-color); }
 
-        .media-card img { width: 100%; height: 100%; object-fit: cover; }
+        /* Terminal Main Dashboard */
+        #terminalDashboard { display: none; }
 
-        .card-info {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            padding: 8px;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+        .pro-header {
+            display: flex; justify-content: space-between; align-items: center;
+            background: var(--bg-surface); padding: 12px 20px; border-radius: var(--radius-md);
+            border: 1px solid var(--border-color); margin-bottom: 16px;
         }
-        .card-info h4 { font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card-info span { font-size: 0.65rem; color: var(--text-muted); }
+        .nav-brand { font-weight: 800; font-size: 0.95rem; letter-spacing: 0.5px; }
+        .session-info { display: flex; align-items: center; gap: 16px; }
+        .account-selector { background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: var(--radius-sm); font-size: 0.8rem; outline: none; cursor: pointer; }
+
+        .btn-action { background: var(--accent-primary); color: #fff; border: none; padding: 8px 14px; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-action:hover { background: var(--accent-hover); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--accent-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* Grid Layout for Pro Terminal */
+        .terminal-grid {
+            display: grid; grid-template-columns: 1fr 340px; gap: 16px;
+        }
+        @media(max-width: 900px) { .terminal-grid { grid-template-columns: 1fr; } }
+
+        .panel-box {
+            background: var(--bg-surface); border: 1px solid var(--border-color);
+            border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px;
+        }
+        .panel-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Tables & Markets */
+        .market-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+        .market-table th { color: var(--text-muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border-color); font-size: 0.75rem; }
+        .market-table td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.02); cursor: pointer; }
+        .market-table tr:hover td { background: rgba(255,255,255,0.01); }
+
+        .text-green { color: var(--accent-green); font-weight: 600; }
+        .text-red { color: var(--accent-red); font-weight: 600; }
+
+        /* Forms & Inputs */
+        .form-row { margin-bottom: 14px; }
+        .form-label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+        .form-input {
+            width: 100%; background: var(--bg-base); border: 1px solid var(--border-color);
+            color: var(--text-main); padding: 10px 12px; border-radius: var(--radius-sm); font-size: 0.85rem; outline: none;
+        }
+        .form-input:focus { border-color: var(--accent-primary); }
+
+        .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; }
+        .checkbox-row input { accent-color: var(--accent-primary); width: 14px; height: 14px; }
+
+        /* Portfolio Balance Cards */
+        .balance-card { background: var(--bg-card); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 12px; }
+        .balance-card span { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+        .balance-card h3 { font-size: 1.3rem; margin-top: 4px; }
+
+        /* Order Execution Box */
+        .order-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+        .order-btn-type { background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+        .order-btn-type.active-buy { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); border-color: var(--accent-green); }
+        .order-btn-type.active-sell { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); border-color: var(--accent-red); }
+
+        .btn-execute { width: 100%; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; border: none; cursor: pointer; font-size: 0.85rem; }
+        .btn-execute.buy { background: var(--accent-green); color: #060911; }
+        .btn-execute.sell { background: var(--accent-red); color: #fff; }
+
+        .error-msg { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--accent-red); color: var(--accent-red); padding: 10px; border-radius: var(--radius-sm); font-size: 0.8rem; margin-bottom: 14px; display: none; }
     </style>
 </head>
 <body>
 
-    <nav>
-        <div class="logo">STREAMFLIX</div>
-        <span class="app-badge">HLS Streamer</span>
-    </nav>
+    <!-- AUTHENTICATION & KYC SCREEN -->
+    <div id="authContainer">
+        <div class="auth-panel">
+            <div class="terminal-logo">APEX GLOBAL <span>PRO</span></div>
+            <div class="auth-subtitle">Institutional Derivatives & Asset Exchange</div>
 
-    <div class="main-layout">
-        <!-- Active Video Player Stage -->
-        <div class="player-stage">
-            <video id="videoPlayer" controls autoplay></video>
-            <div class="player-info">
-                <h2 id="videoTitle">Select a Stream</h2>
-                <p id="videoDesc">Tap any card below to start full streaming playback.</p>
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" id="tabSignIn" onclick="switchAuthView('signin')">Sign In</button>
+                <button class="auth-tab-btn" id="tabRegister" onclick="switchAuthView('register')">Register Account</button>
+            </div>
+
+            <div id="authError" class="error-msg"></div>
+
+            <form id="authForm" onsubmit="processAuthentication(event)">
+                <div class="form-row" id="fullNameRow" style="display: none;">
+                    <label class="form-label">Legal Full Name</label>
+                    <input type="text" id="regName" class="form-input" placeholder="e.g. Peter Ehigie">
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="authEmail" class="form-input" required placeholder="trader@domain.com">
+                </div>
+
+                <div class="form-row">
+                    <label class="form-label">Secure Password (Min 8 chars)</label>
+                    <input type="password" id="authPassword" class="form-input" required placeholder="••••••••" minlength="8">
+                </div>
+
+                <div id="kycFields" style="display: none;">
+                    <div class="form-row">
+                        <label class="form-label">Date of Birth (Age Verification)</label>
+                        <input type="date" id="regDob" class="form-input">
+                    </div>
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="kycCheck" required>
+                        <label for="kycCheck">I certify that I am at least 18 years of age and agree to institutional trading terms.</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-action" style="width: 100%; padding: 12px; margin-top: 6px;" id="authSubmitBtn">Authorize Terminal Access</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN TRADING TERMINAL -->
+    <div id="terminalDashboard">
+        <header class="pro-header">
+            <div class="nav-brand">APEX PRO <span style="font-size: 0.65rem; color: var(--text-muted); background: var(--bg-base); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--border-color);" id="envBadge">DEMO MODE</span></div>
+            <div class="session-info">
+                <select class="account-selector" id="accountModeSelect" onchange="toggleAccountEnvironment(this.value)">
+                    <option value="demo">Demo Environment ($10,000 Virtual)</option>
+                    <option value="live">Live Brokerage Account</option>
+                </select>
+                <div style="font-size: 0.8rem;" id="userDisplayEmail">trader@apex.com</div>
+                <button class="btn-action btn-danger" onclick="terminateSession()">Sign Out</button>
+            </div>
+        </header>
+
+        <div class="terminal-grid">
+            <!-- Left Column: Markets & Holdings -->
+            <div>
+                <div class="panel-box">
+                    <div class="panel-title">
+                        <span>Market Watch & Liquidity Pools</span>
+                        <span style="font-size: 0.75rem; color: var(--accent-green);" id="feedStatus">● Feed Live</span>
+                    </div>
+                    <table class="market-table">
+                        <thead>
+                            <tr>
+                                <th>ASSET</th>
+                                <th>MARKET PRICE</th>
+                                <th>24H CHANGE</th>
+                                <th>ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="marketTableBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="panel-box">
+                    <div class="panel-title">Active Positions & Open Orders</div>
+                    <div id="positionsContainer" style="font-size: 0.85rem; color: var(--text-muted);">No open positions recorded in this account.</div>
+                </div>
+            </div>
+
+            <!-- Right Column: Account Balances & Order Execution Ticket -->
+            <div>
+                <div class="panel-box">
+                    <div class="panel-title">Account Summary</div>
+                    <div class="balance-card">
+                        <span>Net Liquidation Value</span>
+                        <h3 id="netWorthDisplay">$10,000.00</h3>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="balance-card" style="margin-bottom:0;">
+                            <span>Cash Balance</span>
+                            <h4 id="cashBalanceDisplay" style="font-size: 1rem; margin-top:2px;">$10,000.00</h4>
+                        </div>
+                        <div class="balance-card" style="margin-bottom:0;">
+                            <span>Invested Asset Value</span>
+                            <h4 id="investedBalanceDisplay" style="font-size: 1rem; margin-top:2px;">$0.00</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-box">
+                    <div class="panel-title">Order Ticket</div>
+                    <div class="order-tabs">
+                        <button class="order-btn-type active-buy" id="orderTabBuy" onclick="setOrderSide('BUY')">BUY / LONG</button>
+                        <button class="order-btn-type" id="orderTabSell" onclick="setOrderSide('SELL')">SELL / SHORT</button>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">Selected Instrument</label>
+                        <input type="text" id="selectedAssetInput" class="form-input" readonly value="Bitcoin (BTC)">
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">Order Type</label>
+                        <select class="form-input" id="orderTypeSelect">
+                            <option value="MARKET">Market Execution</option>
+                            <option value="LIMIT">Limit Order</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label class="form-label">Total Capital Allocation (USD)</label>
+                        <input type="number" id="orderAmountInput" class="form-input" placeholder="e.g. 500">
+                    </div>
+
+                    <button class="btn-execute buy" id="executeOrderBtn" onclick="submitTradeOrder()">Execute Buy Order</button>
+                </div>
             </div>
         </div>
-
-        <!-- Row: Full Streams & Public Playlists -->
-        <section class="content-section">
-            <h3 class="section-title">Full Movies & Continuous Streams</h3>
-            <div class="media-scroller">
-                <!-- Channel / Movie 1 (Big Buck Bunny HLS Stream Example) -->
-                <div class="media-card" onclick="loadStream('Big Buck Bunny (HD Stream)', 'Full open-source animation feature streaming via HLS.', 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=600&auto=format&fit=crop')">
-                    <img src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=400&auto=format&fit=crop" alt="Big Buck Bunny">
-                    <div class="card-info">
-                        <h4>Big Buck Bunny</h4>
-                        <span>Full Movie</span>
-                    </div>
-                </div>
-
-                <!-- Channel / Movie 2 -->
-                <div class="media-card" onclick="loadStream('Tears of Steel (Sci-Fi Feature)', 'Full-length open sci-fi movie stream.', 'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8', 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=600&auto=format&fit=crop')">
-                    <img src="https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=400&auto=format&fit=crop" alt="Tears of Steel">
-                    <div class="card-info">
-                        <h4>Tears of Steel</h4>
-                        <span>Sci-Fi Feature</span>
-                    </div>
-                </div>
-            </div>
-        </section>
     </div>
 
     <script>
-        // Global HLS handler function
-        function loadStream(title, description, streamUrl, posterUrl) {
-            const video = document.getElementById('videoPlayer');
-            document.getElementById('videoTitle').innerText = title;
-            document.getElementById('videoDesc').innerText = description;
-            video.poster = posterUrl;
+        let currentAuthMode = 'signin';
+        let activeOrderSide = 'BUY';
+        let currentEnv = 'demo';
+        let activeSessionUser = JSON.parse(localStorage.getItem('apex_active_session')) || null;
+        let activeSelectedAsset = { id: 'bitcoin', name: 'Bitcoin', symbol: 'BTC', price: 64230.00 };
 
-            // Check if browser supports HLS natively (like Safari)
-            if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = streamUrl;
-                video.addEventListener('loadedmetadata', function() {
-                    video.play();
-                });
-            } 
-            // Otherwise, use HLS.js to parse and stream the .m3u8 file
-            else if (Hls.isSupported()) {
-                if (window.hls) {
-                    window.hls.destroy(); // Destroy previous stream instance if active
-                }
-                const hls = new Hls();
-                window.hls = hls;
-                hls.loadSource(streamUrl);
-                hls.attachMedia(video);
-                hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    video.play();
-                });
+        let marketAssets = [
+            { id: "bitcoin", name: "Bitcoin", symbol: "BTC", price: 64230.00, change: "+4.2%", isUp: true },
+            { id: "ethereum", name: "Ethereum", symbol: "ETH", price: 3450.50, change: "+1.8%", isUp: true },
+            { id: "solana", name: "Solana", symbol: "SOL", price: 142.10, change: "-2.4%", isUp: false },
+            { id: "cardano", name: "Cardano", symbol: "ADA", price: 0.45, change: "+0.9%", isUp: true }
+        ];
+
+        function switchAuthView(mode) {
+            currentAuthMode = mode;
+            const btnIn = document.getElementById('tabSignIn');
+            const btnReg = document.getElementById('tabRegister');
+            const nameRow = document.getElementById('fullNameRow');
+            const kycRow = document.getElementById('kycFields');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const errBox = document.getElementById('authError');
+
+            errBox.style.display = 'none';
+
+            if (mode === 'signin') {
+                btnIn.className = "auth-tab-btn active";
+                btnReg.className = "auth-tab-btn";
+                nameRow.style.display = 'none';
+                kycRow.style.display = 'none';
+                submitBtn.innerText = "Authorize Terminal Access";
             } else {
-                alert('Your browser does not support HLS streaming.');
+                btnReg.className = "auth-tab-btn active";
+                btnIn.className = "auth-tab-btn";
+                nameRow.style.display = 'block';
+                kycRow.style.display = 'block';
+                submitBtn.innerText = "Register Verified Account";
             }
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // Auto-load the first stream on startup
-        window.onload = function() {
-            loadStream('Big Buck Bunny (HD Stream)', 'Full open-source animation feature streaming via HLS.', 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8', 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=600&auto=format&fit=crop');
-        };
+        function processAuthentication(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value.trim().toLowerCase();
+            const password = document.getElementById('authPassword').value;
+            const errBox = document.getElementById('authError');
+
+            let database = JSON.parse(localStorage.getItem('apex_user_db')) || {};
+
+            if (currentAuthMode === 'register') {
+                const dobVal = document.getElementById('regDob').value;
+                if (!dobVal) {
+                    showError("Date of birth is required for regulatory age compliance.");
+                    return;
+                }
+
+                // Calculate Age
+                const birthDate = new Date(dobVal);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+
+                if (age < 18) {
+                    showError("Regulatory Compliance Error: You must be at least 18 years old to open an account.");
+                    return;
+                }
+
+                if (database[email]) {
+                    showError("An account associated with this email already exists.");
+                    return;
+                }
+
+                // Save secure credential container with isolated environment balances
+                database[email] = {
+                    name: document.getElementById('regName').value.trim() || 'Verified Trader',
+                    email: email,
+                    passwordHash: btoa(password), // Base64 basic credential obfuscation simulation
+                    demo: { balance: 10000.00, portfolio: {}, history: [] },
+                    live: { balance: 0.00, portfolio: {}, history: [] }
+                };
+
+                localStorage.setItem('apex_user_db', JSON.stringify(database));
+                alert("Account successfully created and verified. Please sign in.");
+                switchAuthView('signin');
+            } else {
+                if (!database[email] || database[email].passwordHash !== btoa(password)) {
+                    showError("Authentication failed: Invalid credentials provided.");
+                    return;
+                }
+
+                activeSessionUser = database[email];
+                localStorage.setItem('apex_active_session', JSON.stringify(activeSessionUser));
+                initializeTerminal();
+            }
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('authError');
+            err.innerText = msg;
+            err.style.display = 'block';
+        }
+
+        function terminateSession() {
+            localStorage.removeItem('apex_active_session');
+            activeSessionUser = null;
+            document.getElementById('terminalDashboard').style.display = 'none';
+            document.getElementById('authContainer').style.display = 'flex';
+        }
+
+        function initializeTerminal() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('terminalDashboard').style.display = 'block';
+            document.getElementById('userDisplayEmail').innerText = activeSessionUser.email;
+            renderMarketWatch();
+            syncUserDataStorage();
+        }
+
+        function toggleAccountEnvironment(env) {
+            currentEnv = env;
+            document.getElementById('envBadge').innerText = env === 'demo' ? 'DEMO MODE' : 'LIVE BROKERAGE';
+            syncUserDataStorage();
+        }
+
+        function renderMarketWatch() {
+            const tbody = document.getElementById('marketTableBody');
+            tbody.innerHTML = '';
+
+            marketAssets.forEach(asset => {
+                const tr = document.createElement('tr');
+                tr.onclick = () => selectAssetForTrade(asset);
+                tr.innerHTML = `
+                    <td><strong>${asset.name}</strong> <span style="color:var(--text-muted); font-size:0.75rem;">${asset.symbol}</span></td>
+                    <td>$${asset.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td class="${asset.isUp ? 'text-green' : 'text-red'}">${asset.change}</td>
+                    <td><button class="btn-action" style="padding: 4px 10px; font-size:0.75rem;" onclick="event.stopPropagation(); selectAssetForTrade(${JSON.stringify(asset).replace(/"/g, '&quot;')})">Trade</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function selectAssetForTrade(asset) {
+            activeSelectedAsset = asset;
+            document.getElementById('selectedAssetInput').value = `${asset.name} (${asset.symbol})`;
+        }
+
+        function setOrderSide(side) {
+            activeOrderSide = side;
+            const btnBuy = document.getElementById('orderTabBuy');
+            const btnSell = document.getElementById('orderTabSell');
+            const execBtn = document.getElementById('executeOrderBtn');
+
+            if (side === 'BUY') {
+                btnBuy.className = "order-btn-type active-buy";
+                btnSell.className = "order-btn-type";
+                execBtn.className = "btn-execute buy";
+                execBtn.innerText = `Execute Buy Order (${activeSelectedAsset.symbol})`;
+            } else {
+                btnSell.className = "order-btn-type active-sell";
+                btnBuy.className = "order-btn-type";
+                execBtn.className = "btn-execute sell";
+                execBtn.innerText = `Execute Sell Order (${activeSelectedAsset.symbol})`;
+            }
+        }
+
+        function syncUserDataStorage() {
+            if (!activeSessionUser) return;
+            const db = JSON.parse(localStorage.getItem('apex_user_db')) || {};
+            activeSessionUser = db[activeSessionUser.email];
+
+            const envData = activeSessionUser[currentEnv];
+            let investedVal = 0;
+
+            Object.keys(envData.portfolio).forEach(key => {
+                const holding = envData.portfolio[key];
+                const marketAsset = marketAssets.find(a => a.id === key);
+                if (marketAsset) {
+                    investedVal += holding.amount * marketAsset.price;
+                }
+            });
+
+            document.getElementById('cashBalanceDisplay').innerText = `$${envData.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+            document.getElementById('investedBalanceDisplay').innerText = `$${investedVal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+            document.getElementById('netWorthDisplay').innerText = `$${(envData.balance + investedVal).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+
+            // Render positions
+            const posContainer = document.getElementById('positionsContainer');
+            posContainer.innerHTML = '';
+            let hasPos = false;
+
+            Object.keys(envData.portfolio).forEach(key => {
+                const holding = envData.portfolio[key];
+                const marketAsset = marketAssets.find(a => a.id === key);
+                if (holding.amount > 0.00001 && marketAsset) {
+                    hasPos = true;
+                    const val = holding.amount * marketAsset.price;
+                    const pl = val - holding.cost;
+                    const div = document.createElement('div');
+                    div.style.cssText = "background: var(--bg-base); padding: 10px; border-radius: 6px; margin-bottom: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;";
+                    div.innerHTML = `
+                        <div>
+                            <strong>${marketAsset.name}</strong><br>
+                            <span style="font-size:0.75rem; color:var(--text-muted);">${holding.amount.toFixed(4)} ${marketAsset.symbol}</span>
+                        </div>
+                        <div style="text-align:right;">
+                            <strong>$${val.toFixed(2)}</strong><br>
+                            <span class="${pl >= 0 ? 'text-green' : 'text-red'}" style="font-size:0.75rem;">${pl >= 0 ? '+' : ''}$${pl.toFixed(2)}</span>
+                        </div>
+                    `;
+                    posContainer.appendChild(div);
+                }
+            });
+
+            if (!hasPos) {
+                posContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 0.8rem;">No open positions in this portfolio environment.</div>`;
+            }
+        }
+
+        function submitTradeOrder() {
+            const amtInput = document.getElementById('orderAmountInput').value;
+            const amount = parseFloat(amtInput);
+
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid capital allocation amount.');
+                return;
+            }
+
+            let db = JSON.parse(localStorage.getItem('apex_user_db')) || {};
+            let user = db[activeSessionUser.email];
+            let env = user[currentEnv];
+
+            if (!env.portfolio[activeSelectedAsset.id]) {
+                env.portfolio[activeSelectedAsset.id] = { amount: 0, cost: 0 };
+            }
+
+            const unitCount = amount / activeSelectedAsset.price;
+
+            if (activeOrderSide === 'BUY') {
+                if (amount > env.balance) {
+                    alert('Insufficient cash margin balance for this order execution.');
+                    return;
+                }
+                env.balance -= amount;
+                env.portfolio[activeSelectedAsset.id].amount += unitCount;
+                env.portfolio[activeSelectedAsset.id].cost += amount;
+                alert(`Successfully filled BUY order for ${unitCount.toFixed(4)} ${activeSelectedAsset.symbol}`);
+            } else {
+                const currentHoldingsVal = env.portfolio[activeSelectedAsset.id].amount * activeSelectedAsset.price;
+                if (amount > currentHoldingsVal) {
+                    alert('Position size reduction exceeds current holdings value.');
+                    return;
+                }
+                env.balance += amount;
+                env.portfolio[activeSelectedAsset.id].amount -= unitCount;
+                env.portfolio[activeSelectedAsset.id].cost -= (amount * (env.portfolio[activeSelectedAsset.id].cost / currentHoldingsVal || 1));
+                
+                if (env.portfolio[activeSelectedAsset.id].amount < 0.00001) {
+                    env.portfolio[activeSelectedAsset.id].amount = 0;
+                    env.portfolio[activeSelectedAsset.id].cost = 0;
+                }
+                alert(`Successfully filled SELL order for ${activeSelectedAsset.symbol}`);
+            }
+
+            db[activeSessionUser.email] = user;
+            localStorage.setItem('apex_user_db', JSON.stringify(db));
+            localStorage.setItem('apex_active_session', JSON.stringify(user));
+            document.getElementById('orderAmountInput').value = '';
+            syncUserDataStorage();
+        }
+
+        // Auto-resume session if active
+        if (activeSessionUser) {
+            initializeTerminal();
+        }
     </script>
 </body>
 </html>
