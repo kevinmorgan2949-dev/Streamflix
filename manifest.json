@@ -2,12 +2,12 @@
   "name": "Streamflix",
   "short_name": "SMF",
   "description": "Your ultimate streaming destination for movies and shows.",
-  "start_url": "./index.html",
+  "start_url": "/Streamflix/index.html",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#e50914",
   "orientation": "portrait",
-  "id": "/",
+  "id": "/Streamflix/",
   "categories": [
     "entertainment",
     "video"
