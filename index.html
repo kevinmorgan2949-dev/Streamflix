@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roughneck Life: Open World Oilfield</title>
+    <title>Roughneck Life: 3D Open World</title>
+    <!-- Include Three.js for 3D graphics inside the browser -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
             --bg-dark: #0b0f19;
-            --card-bg: #131b2e;
+            --card-bg: rgba(19, 27, 46, 0.95);
             --accent-gold: #f59e0b;
             --accent-blue: #3b82f6;
             --text-main: #f8fafc;
@@ -16,169 +18,252 @@
             --success: #22c55e;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .container { width: 100%; max-width: 600px; background: var(--card-bg); border: 1px solid #1e293b; border-radius: 12px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        h1 { color: var(--accent-gold); font-size: 1.8rem; margin-bottom: 10px; text-align: center; }
-        p.subtitle { color: var(--text-muted); text-align: center; margin-bottom: 25px; font-size: 0.95rem; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
-        input, select { width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 1rem; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg-dark); color: var(--text-main); }
+        
+        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* UI Overlays */
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .container { pointer-events: auto; width: 100%; max-width: 550px; background: var(--card-bg); border: 1px solid #1e293b; border-radius: 12px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.8); backdrop-filter: blur(10px); }
+        
+        h1 { color: var(--accent-gold); font-size: 1.6rem; margin-bottom: 8px; text-align: center; }
+        p.subtitle { color: var(--text-muted); text-align: center; margin-bottom: 20px; font-size: 0.9rem; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; }
+        input, select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 6px; color: white; font-size: 0.95rem; }
         input:focus, select:focus { outline: none; border-color: var(--accent-gold); }
-        .btn { width: 100%; padding: 12px; background: var(--accent-gold); color: #000; font-weight: bold; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
+        .btn { width: 100%; padding: 12px; background: var(--accent-gold); color: #000; font-weight: bold; border: none; border-radius: 6px; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
         .btn:hover { background: #d97706; }
+        
         .screen { display: none; }
         .screen.active { display: block; }
-        .country-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .country-card { background: #0f172a; border: 2px solid #334155; border-radius: 8px; padding: 15px; cursor: pointer; text-align: center; transition: all 0.2s; }
+        
+        .country-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .country-card { background: #0f172a; border: 2px solid #334155; border-radius: 6px; padding: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
         .country-card:hover, .country-card.selected { border-color: var(--accent-gold); background: #1e293b; }
-        .stats-bar { display: flex; justify-content: space-between; background: #0f172a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #334155; }
-        .stat-item { text-align: center; }
-        .stat-val { font-size: 1.2rem; font-weight: bold; color: var(--accent-gold); }
-        .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-        .alert { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9rem; text-align: center; }
+
+        /* HUD & Smartphone UI */
+        #hud { position: absolute; top: 15px; left: 15px; z-index: 5; display: none; pointer-events: auto; }
+        .hud-panel { background: rgba(15, 23, 42, 0.85); border: 1px solid #334155; padding: 10px 15px; border-radius: 8px; display: flex; gap: 15px; align-items: center; }
+        .hud-stat { font-size: 0.85rem; }
+        .hud-stat span { color: var(--accent-gold); font-weight: bold; display: block; }
+
+        #phone-btn { position: absolute; bottom: 20px; right: 20px; z-index: 5; background: var(--accent-blue); color: white; border: none; width: 60px; height: 60px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; }
+        
+        /* Smartphone Job Finder Drawer */
+        #phone-drawer { position: absolute; bottom: 90px; right: 20px; width: 320px; background: var(--card-bg); border: 1px solid #334155; border-radius: 12px; padding: 15px; z-index: 10; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
+        .job-item { background: #0f172a; padding: 10px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #1e293b; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- SCREEN 1: REGISTRATION & COUNTRY SELECTION -->
-        <div id="screen-register" class="screen active">
+    <!-- 3D WebGL Canvas Render -->
+    <div id="canvas-container"></div>
+
+    <!-- HUD Overlay -->
+    <div id="hud">
+        <div class="hud-panel">
+            <div class="hud-stat">CALLSIGN<span id="hud-name">-</span></div>
+            <div class="hud-stat">WALLET<span id="hud-cash">$5,000</span></div>
+            <div class="hud-stat">LOCATION<span id="hud-hub">-</span></div>
+        </div>
+    </div>
+
+    <!-- Phone Button -->
+    <button id="phone-btn" onclick="togglePhone()">📱</button>
+
+    <!-- Smartphone Job Finder -->
+    <div id="phone-drawer">
+        <h3 style="color:var(--accent-gold); margin-bottom:10px; font-size:1rem;">OilField Job Board</h3>
+        <div class="job-item">
+            <strong>Roustabout Shift</strong><br>Location: Onshore Rig 3<br>Pay: $1,200 / shift<br>
+            <button class="btn" style="padding:6px; margin-top:5px; font-size:0.8rem;" onclick="takeJob(1200, 'Roustabout')">Accept Job</button>
+        </div>
+        <div class="job-item">
+            <strong>Junior Mud Logger</strong><br>Location: Deepwater Platform<br>Pay: $2,500 / shift<br>
+            <button class="btn" style="padding:6px; margin-top:5px; font-size:0.8rem;" onclick="takeJob(2500, 'Mud Logger')">Accept Job</button>
+        </div>
+    </div>
+
+    <!-- UI Interaction Layer -->
+    <div class="ui-layer">
+        <!-- SCREEN 1: REGISTRATION -->
+        <div id="screen-register" class="container screen active">
             <h1>Roughneck Life</h1>
-            <p class="subtitle">Open-World Petroleum Career & Operations</p>
+            <p class="subtitle">3D Open-World Petroleum Career</p>
             
             <div class="form-group">
-                <label>Engineer Callsign / Name</label>
-                <input type="text" id="username" placeholder="e.g. Peter (Rig Boss)">
+                <label>Engineer Callsign</label>
+                <input type="text" id="username" placeholder="e.g. Peter">
             </div>
 
             <div class="form-group">
-                <label>Select Home Country & Sector</label>
+                <label>Select Global Starting Hub</label>
                 <div class="country-grid">
                     <div class="country-card" onclick="selectCountry('USA', this)">
                         <h3>🇺🇸 USA</h3>
-                        <p style="font-size:0.8rem; color:var(--text-muted);">Houston / Permian Shale</p>
+                        <p style="font-size:0.75rem; color:var(--text-muted);">Houston / Permian</p>
                     </div>
                     <div class="country-card" onclick="selectCountry('Nigeria', this)">
                         <h3>🇳🇬 Nigeria</h3>
-                        <p style="font-size:0.8rem; color:var(--text-muted);">Port Sterling / Delta Swamp</p>
+                        <p style="font-size:0.75rem; color:var(--text-muted);">Port Sterling / Delta</p>
                     </div>
                     <div class="country-card" onclick="selectCountry('UAE', this)">
                         <h3>🇦🇪 UAE</h3>
-                        <p style="font-size:0.8rem; color:var(--text-muted);">Abu Dhabi / Desert Fields</p>
+                        <p style="font-size:0.75rem; color:var(--text-muted);">Abu Dhabi / Desert</p>
                     </div>
                     <div class="country-card" onclick="selectCountry('UK', this)">
                         <h3>🇬🇧 UK</h3>
-                        <p style="font-size:0.8rem; color:var(--text-muted);">Aberdeen / North Sea</p>
+                        <p style="font-size:0.75rem; color:var(--text-muted);">Aberdeen / North Sea</p>
                     </div>
                 </div>
             </div>
 
-            <button class="btn" onclick="startExamScreen()">Proceed to Certification Exam</button>
+            <button class="btn" onclick="goToExam()">Proceed to Licensing Exam</button>
         </div>
 
-        <!-- SCREEN 2: PETROLEUM ENGINEERING EXAM -->
-        <div id="screen-exam" class="screen">
-            <h1>Licensing Exam</h1>
-            <p class="subtitle">Pass the Board Test to Earn Your Junior Engineer Badge</p>
+        <!-- SCREEN 2: EXAM -->
+        <div id="screen-exam" class="container screen">
+            <h1>Engineering Board Test</h1>
+            <p class="subtitle">Pass to unlock employment permits</p>
             
-            <div id="exam-container">
-                <div class="form-group">
-                    <label id="question-text">1. Which geological property measures the percentage of pore space in a rock reservoir?</label>
-                    <select id="exam-answer">
-                        <option value="wrong">Permeability</option>
-                        <option value="correct">Porosity</option>
-                        <option value="wrong">Viscosity</option>
-                        <option value="wrong">Salinity</option>
-                    </select>
-                </div>
-                <button class="btn" onclick="submitExam()">Submit Exam Answer</button>
-            </div>
-        </div>
-
-        <!-- SCREEN 3: OPEN WORLD OPERATIONS DASHBOARD -->
-        <div id="screen-dashboard" class="screen">
-            <h1 id="dash-title">Rig Operations Hub</h1>
-            <p class="subtitle" id="dash-location">Sector: Loading...</p>
-
-            <div class="stats-bar">
-                <div class="stat-item">
-                    <div class="stat-val" id="player-rank">Trainee</div>
-                    <div class="stat-label">Rank</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-val" id="player-cash">$5,000</div>
-                    <div class="stat-label">Wallet</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-val" id="sec-level">Secure</div>
-                    <div class="stat-label">Zone Status</div>
-                </div>
-            </div>
-
             <div class="form-group">
-                <label>Available Field Operations</label>
-                <button class="btn" style="background:var(--accent-blue); color:white; margin-bottom:10px;" onclick="runOperation('drilling')">Start Onshore/Offshore Drilling Shift</button>
-                <button class="btn" style="background:#1e293b; color:white; border:1px solid #334155;" onclick="runOperation('convoy')">Dispatch Armored Logistics Convoy</button>
+                <label>Which parameter measures the percentage of pore space in an oil reservoir rock?</label>
+                <select id="exam-ans">
+                    <option value="wrong">Permeability</option>
+                    <option value="correct">Porosity</option>
+                    <option value="wrong">Viscosity</option>
+                </select>
             </div>
-
-            <div id="op-log" style="background:#0f172a; padding:12px; border-radius:8px; font-size:0.85rem; color:var(--text-muted); min-height:60px;">
-                Ready for deployment. Select an operation above.
-            </div>
+            <button class="btn" onclick="submitExam()">Submit Exam</button>
         </div>
     </div>
 
     <script>
-        let selectedCountryName = '';
-        let playerData = { name: '', country: '', cash: 5000, rank: 'Roustabout' };
+        let selectedCountry = '';
+        let player = { name: '', country: '', cash: 5000, rank: 'Trainee' };
 
-        function selectCountry(country, element) {
+        function selectCountry(country, el) {
             document.querySelectorAll('.country-card').forEach(c => c.classList.remove('selected'));
-            element.classList.add('selected');
-            selectedCountryName = country;
+            el.classList.add('selected');
+            selectedCountry = country;
         }
 
-        function startExamScreen() {
+        function goToExam() {
             const name = document.getElementById('username').value.trim();
-            if (!name) {
-                alert('Please enter your engineer callsign.');
+            if (!name || !selectedCountry) {
+                alert('Please enter your name and select a country hub.');
                 return;
             }
-            if (!selectedCountryName) {
-                alert('Please select your starting home country.');
-                return;
-            }
-            playerData.name = name;
-            playerData.country = selectedCountryName;
+            player.name = name;
+            player.country = selectedCountry;
 
             document.getElementById('screen-register').classList.remove('active');
             document.getElementById('screen-exam').classList.add('active');
         }
 
         function submitExam() {
-            const ans = document.getElementById('exam-answer').value;
+            const ans = document.getElementById('exam-ans').value;
             if (ans === 'correct') {
-                alert('Congratulations! Exam passed successfully. License granted.');
+                alert('Exam Passed! Welcome to the Open World.');
                 document.getElementById('screen-exam').classList.remove('active');
-                document.getElementById('screen-dashboard').classList.add('active');
                 
-                document.getElementById('dash-title').innerText = `${playerData.name}'s Rig Operations`;
-                document.getElementById('dash-location').innerText = `Home Hub: ${playerData.country} Sector`;
+                // Show HUD & Phone
+                document.getElementById('hud').style.display = 'block';
+                document.getElementById('phone-btn').style.display = 'block';
+                
+                document.getElementById('hud-name').innerText = player.name;
+                document.getElementById('hud-cash').innerText = `$${player.cash.toLocaleString()}`;
+                document.getElementById('hud-hub').innerText = player.country;
+
+                init3DWorld();
             } else {
-                alert('Incorrect answer! Porosity measures pore volume percentage. Try again.');
+                alert('Incorrect! Porosity measures pore volume percentage. Try again.');
             }
         }
 
-        function runOperation(type) {
-            const logBox = document.getElementById('op-log');
-            if (type === 'drilling') {
-                playerData.cash += 1200;
-                document.getElementById('player-cash').innerText = `$${playerData.cash.toLocaleString()}`;
-                logBox.innerHTML = `✅ Successfully completed drilling shift in ${playerData.country}. Earned +$1,200 revenue!`;
-            } else {
-                playerData.cash += 850;
-                document.getElementById('player-cash').innerText = `$${playerData.cash.toLocaleString()}`;
-                logBox.innerHTML = `🛡️ Armored convoy successfully defended against regional bandits. Collected transit fees: +$850!`;
+        function togglePhone() {
+            const drawer = document.getElementById('phone-drawer');
+            drawer.style.display = drawer.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function takeJob(pay, title) {
+            player.cash += pay;
+            player.rank = title;
+            document.getElementById('hud-cash').innerText = `$${player.cash.toLocaleString()}`;
+            alert(`Shift completed successfully! Earned +$${pay.toLocaleString()}`);
+            togglePhone();
+        }
+
+        // Three.js 3D Open World Environment Setup
+        function init3DWorld() {
+            const container = document.getElementById('canvas-container');
+            
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0b0f19);
+
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 10, 15);
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xf59e0b, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            scene.add(directionalLight);
+
+            // Ground plane (City Street / Terrain)
+            const groundGeo = new THREE.PlaneGeometry(100, 100);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            scene.add(ground);
+
+            // Simple 3D Buildings representing the City Hub
+            const buildingMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+            for (let i = -30; i <= 30; i += 15) {
+                for (let j = -30; j <= 30; j += 15) {
+                    if (i === 0 && j === 0) continue;
+                    const height = 5 + Math.random() * 15;
+                    const bGeo = new THREE.BoxGeometry(8, height, 8);
+                    const building = new THREE.Mesh(bGeo, buildingMat);
+                    building.position.set(i, height / 2, j);
+                    scene.add(building);
+                }
             }
+
+            // Player 3D Character Box
+            const playerGeo = new THREE.BoxGeometry(1, 2, 1);
+            const playerMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b });
+            const character = new THREE.Mesh(playerGeo, playerMat);
+            character.position.set(0, 1, 0);
+            scene.add(character);
+
+            // Animation Loop & Camera follow
+            let angle = 0;
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Slow orbit rotation for cinematic open-world view
+                angle += 0.005;
+                camera.position.x = Math.sin(angle) * 20;
+                camera.position.z = Math.cos(angle) * 20;
+                camera.lookAt(0, 1, 0);
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
         }
     </script>
 </body>
