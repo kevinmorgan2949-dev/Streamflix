@@ -1,31 +1,22 @@
 {
-  "name": "Streamflix",
-  "short_name": "SMF",
-  "description": "Your ultimate streaming destination for movies and shows.",
-  "start_url": "/Streamflix/index.html",
+  "name": "MyBank Demo",
+  "short_name": "MyBank",
+  "description": "A demo banking application",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#e50914",
+  "background_color": "#f4f6f8",
+  "theme_color": "#075e54",
   "orientation": "portrait",
-  "id": "/Streamflix/",
-  "categories": [
-    "entertainment",
-    "video"
-  ],
   "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "screenshot-narrow.png",
-      "sizes": "720x1280",
-      "type": "image/png",
-      "form_factor": "narrow"
+      "type": "image/png"
     }
   ]
 }

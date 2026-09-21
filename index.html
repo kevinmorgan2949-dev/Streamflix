@@ -3,291 +3,244 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roughneck Life: Open World RPG</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        :root {
-            --bg-dark: #0b0f19;
-            --card-bg: rgba(19, 27, 46, 0.95);
-            --accent-gold: #f59e0b;
-            --accent-blue: #3b82f6;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --danger: #ef4444;
-            --success: #22c55e;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg-dark); color: var(--text-main); }
-        
-        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
 
-        /* Screens & UI Overlays */
-        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .container { pointer-events: auto; width: 100%; max-width: 480px; background: var(--card-bg); border: 1px solid #1e293b; border-radius: 14px; padding: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.8); backdrop-filter: blur(12px); }
-        
-        h1 { color: var(--accent-gold); font-size: 1.6rem; margin-bottom: 8px; text-align: center; }
-        p.subtitle { color: var(--text-muted); text-align: center; margin-bottom: 20px; font-size: 0.85rem; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; }
-        input, select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 0.95rem; }
-        .btn { width: 100%; padding: 12px; background: var(--accent-gold); color: #000; font-weight: bold; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; margin-top: 10px; }
-        .btn:hover { background: #d97706; }
-        
-        .screen { display: none; }
-        .screen.active { display: block; }
-        
-        .country-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .country-card { background: #0f172a; border: 2px solid #334155; border-radius: 8px; padding: 10px; cursor: pointer; text-align: center; transition: all 0.2s; }
-        .country-card:hover, .country-card.selected { border-color: var(--accent-gold); background: #1e293b; }
+    <title>MyBank</title>
 
-        /* HUD & Controls */
-        #hud { position: absolute; top: 15px; left: 15px; z-index: 5; display: none; pointer-events: auto; }
-        .hud-panel { background: rgba(15, 23, 42, 0.9); border: 1px solid #334155; padding: 10px 15px; border-radius: 10px; display: flex; gap: 15px; align-items: center; }
-        .hud-stat { font-size: 0.8rem; }
-        .hud-stat span { color: var(--accent-gold); font-weight: bold; display: block; }
-
-        /* Joystick / Movement Controls for Mobile */
-        #controls { position: absolute; bottom: 20px; left: 20px; z-index: 5; display: none; pointer-events: auto; display: flex; gap: 10px; }
-        .ctrl-btn { width: 60px; height: 60px; background: rgba(59, 130, 246, 0.8); color: white; border: none; border-radius: 50%; font-size: 1.2rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
-
-        #phone-btn { position: absolute; bottom: 20px; right: 20px; z-index: 5; background: var(--accent-blue); color: white; border: none; width: 60px; height: 60px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; }
-        
-        /* Smartphone Job Finder Drawer */
-        #phone-drawer { position: absolute; bottom: 90px; right: 20px; width: 300px; background: var(--card-bg); border: 1px solid #334155; border-radius: 12px; padding: 15px; z-index: 10; display: none; box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
-        .job-item { background: #0f172a; padding: 10px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #1e293b; font-size: 0.8rem; }
-
-        /* Interview Modal */
-        #interview-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: var(--card-bg); border: 2px solid var(--accent-gold); border-radius: 12px; padding: 20px; z-index: 20; display: none; box-shadow: 0 20px 40px rgba(0,0,0,0.9); }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <div id="canvas-container"></div>
+    <!-- LOGIN PAGE -->
+    <section id="loginPage" class="page login-page">
 
-    <!-- HUD -->
-    <div id="hud">
-        <div class="hud-panel">
-            <div class="hud-stat">PLAYER<span id="hud-name">-</span></div>
-            <div class="hud-stat">WALLET<span id="hud-cash">$5,000</span></div>
-            <div class="hud-stat">HUB<span id="hud-hub">-</span></div>
+        <div class="logo">
+            <div class="logo-icon">₦</div>
+            <h1>MyBank</h1>
         </div>
-    </div>
 
-    <!-- Movement Controls -->
-    <div id="controls" style="display:none;">
-        <button class="ctrl-btn" ontouchstart="movePlayer('left')" onclick="movePlayer('left')">⬅️</button>
-        <button class="ctrl-btn" ontouchstart="movePlayer('forward')" onclick="movePlayer('forward')">⬆️</button>
-        <button class="ctrl-btn" ontouchstart="movePlayer('right')" onclick="movePlayer('right')">➡️</button>
-        <button class="ctrl-btn" ontouchstart="movePlayer('back')" onclick="movePlayer('back')">⬇️</button>
-    </div>
+        <div class="login-box">
 
-    <button id="phone-btn" onclick="togglePhone()">📱</button>
+            <h2>Welcome Back 👋</h2>
+            <p>Login to your account</p>
 
-    <!-- Phone Drawer -->
-    <div id="phone-drawer">
-        <h3 style="color:var(--accent-gold); margin-bottom:10px; font-size:0.95rem;">KM Graphix & Oil Job Board</h3>
-        <div class="job-item">
-            <strong>Senior Mud Logger Interview</strong><br>Location: Corporate Rig HQ<br>Pay: $3,500<br>
-            <button class="btn" style="padding:6px; margin-top:5px; font-size:0.75rem;" onclick="setWaypoint()">Navigate to HQ</button>
-        </div>
-    </div>
+            <label>Username</label>
+            <input type="text" id="username" placeholder="Enter username">
 
-    <!-- Live Interview Exam Modal -->
-    <div id="interview-modal">
-        <h3 style="color:var(--accent-gold); margin-bottom:10px;">Recruiter Interview</h3>
-        <p id="interview-q" style="font-size:0.85rem; margin-bottom:12px; color:var(--text-muted);">Recruiter: "Welcome to our HQ. To get hired, tell me: Which parameter measures the percentage of pore space in a reservoir rock?"</p>
-        <select id="interview-ans" style="margin-bottom:12px;">
-            <option value="wrong">Permeability</option>
-            <option value="correct">Porosity</option>
-            <option value="wrong">Viscosity</option>
-        </select>
-        <button class="btn" onclick="submitInterview()">Answer & Claim Job</button>
-    </div>
+            <label>Password</label>
 
-    <!-- UI Setup Layer -->
-    <div class="ui-layer">
-        <div id="screen-register" class="container screen active">
-            <h1>Roughneck Life</h1>
-            <p class="subtitle">Open-World Petroleum Career RPG</p>
-            
-            <div class="form-group">
-                <label>Engineer Callsign</label>
-                <input type="text" id="username" placeholder="e.g. Peter">
+            <div class="password-box">
+                <input type="password" id="password" placeholder="Enter password">
+                <button onclick="showPassword()">👁</button>
             </div>
 
-            <div class="form-group">
-                <label>Select Starting Global Hub</label>
-                <div class="country-grid">
-                    <div class="country-card" onclick="selectCountry('USA', this)">
-                        <h3>🇺🇸 USA</h3>
-                        <p style="font-size:0.7rem; color:var(--text-muted);">Houston / Permian</p>
-                    </div>
-                    <div class="country-card" onclick="selectCountry('Nigeria', this)">
-                        <h3>🇳🇬 Nigeria</h3>
-                        <p style="font-size:0.7rem; color:var(--text-muted);">Port Sterling / Delta</p>
-                    </div>
-                    <div class="country-card" onclick="selectCountry('UAE', this)">
-                        <h3>🇦🇪 UAE</h3>
-                        <p style="font-size:0.7rem; color:var(--text-muted);">Abu Dhabi / Desert</p>
-                    </div>
-                    <div class="country-card" onclick="selectCountry('UK', this)">
-                        <h3>🇬🇧 UK</h3>
-                        <p style="font-size:0.7rem; color:var(--text-muted);">Aberdeen / North Sea</p>
-                    </div>
+            <button class="primary-btn" onclick="login()">
+                Login
+            </button>
+
+            <p id="loginError" class="error"></p>
+
+        </div>
+
+    </section>
+
+
+    <!-- MAIN APP -->
+    <section id="appPage" class="page app-page hidden">
+
+        <!-- HEADER -->
+        <header>
+
+            <div>
+                <small>Welcome back</small>
+                <h2 id="userNameDisplay">User</h2>
+            </div>
+
+            <button class="profile-btn" onclick="logout()">
+                👤
+            </button>
+
+        </header>
+
+
+        <!-- BALANCE CARD -->
+        <div class="balance-card">
+
+            <div class="balance-top">
+                <span>Total Balance</span>
+                <button onclick="toggleBalance()">👁</button>
+            </div>
+
+            <h1 id="balance">₦250,000.00</h1>
+
+            <div class="account-number">
+                <span>Account</span>
+                <strong>**** 4821</strong>
+            </div>
+
+        </div>
+
+
+        <!-- QUICK ACTIONS -->
+        <div class="actions">
+
+            <button onclick="openTransfer()">
+                <span>↗</span>
+                Transfer
+            </button>
+
+            <button onclick="showMessage('Airtime feature coming soon')">
+                <span>📱</span>
+                Airtime
+            </button>
+
+            <button onclick="showMessage('Bills feature coming soon')">
+                <span>💡</span>
+                Bills
+            </button>
+
+            <button onclick="showMessage('More services coming soon')">
+                <span>•••</span>
+                More
+            </button>
+
+        </div>
+
+
+        <!-- TRANSACTIONS -->
+        <div class="section-title">
+
+            <h3>Recent Transactions</h3>
+
+            <button onclick="showAllTransactions()">
+                See all
+            </button>
+
+        </div>
+
+        <div id="transactions">
+
+            <div class="transaction">
+                <div class="transaction-icon received">
+                    ↓
                 </div>
+
+                <div class="transaction-info">
+                    <strong>Salary</strong>
+                    <small>Today • 10:30 AM</small>
+                </div>
+
+                <strong class="green">
+                    +₦50,000
+                </strong>
             </div>
 
-            <button class="btn" onclick="startWorld()">Enter Open World</button>
+
+            <div class="transaction">
+                <div class="transaction-icon sent">
+                    ↑
+                </div>
+
+                <div class="transaction-info">
+                    <strong>John Doe</strong>
+                    <small>Yesterday • 4:12 PM</small>
+                </div>
+
+                <strong class="red">
+                    -₦10,000
+                </strong>
+            </div>
+
+
+            <div class="transaction">
+                <div class="transaction-icon sent">
+                    ↑
+                </div>
+
+                <div class="transaction-info">
+                    <strong>Electricity</strong>
+                    <small>20 Sep • 2:30 PM</small>
+                </div>
+
+                <strong class="red">
+                    -₦7,500
+                </strong>
+            </div>
+
         </div>
+
+
+        <!-- BOTTOM NAVIGATION -->
+        <nav>
+
+            <button class="active">
+                <span>⌂</span>
+                Home
+            </button>
+
+            <button onclick="openTransfer()">
+                <span>↗</span>
+                Transfer
+            </button>
+
+            <button onclick="showMessage('Cards coming soon')">
+                <span>▣</span>
+                Cards
+            </button>
+
+            <button onclick="showMessage('Profile coming soon')">
+                <span>👤</span>
+                Profile
+            </button>
+
+        </nav>
+
+    </section>
+
+
+    <!-- TRANSFER MODAL -->
+    <div id="transferModal" class="modal hidden">
+
+        <div class="modal-box">
+
+            <button class="close" onclick="closeTransfer()">×</button>
+
+            <h2>Send Money</h2>
+            <p>Demo transfer</p>
+
+            <label>Account Number</label>
+            <input
+                type="number"
+                id="accountNumber"
+                placeholder="Enter account number"
+            >
+
+            <label>Amount</label>
+            <input
+                type="number"
+                id="transferAmount"
+                placeholder="₦0.00"
+            >
+
+            <label>Description</label>
+            <input
+                type="text"
+                id="description"
+                placeholder="What's this for?"
+            >
+
+            <button class="primary-btn" onclick="transferMoney()">
+                Continue
+            </button>
+
+        </div>
+
     </div>
 
-    <script>
-        let selectedCountry = '';
-        let player = { name: '', country: '', cash: 5000, rank: 'Unemployed', x: 0, z: 0 };
-        let character, npcRecruiter, car;
 
-        function selectCountry(country, el) {
-            document.querySelectorAll('.country-card').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            selectedCountry = country;
-        }
+    <div id="toast"></div>
 
-        function startWorld() {
-            const name = document.getElementById('username').value.trim();
-            if (!name || !selectedCountry) {
-                alert('Please enter your name and select a country hub.');
-                return;
-            }
-            player.name = name;
-            player.country = selectedCountry;
+    <script src="script.js"></script>
 
-            document.getElementById('screen-register').classList.remove('active');
-            document.getElementById('hud').style.display = 'block';
-            document.getElementById('controls').style.display = 'flex';
-            document.getElementById('phone-btn').style.display = 'block';
-            
-            document.getElementById('hud-name').innerText = player.name;
-            document.getElementById('hud-cash').innerText = `$${player.cash.toLocaleString()}`;
-            document.getElementById('hud-hub').innerText = player.country;
-
-            init3DOpenWorld();
-        }
-
-        function togglePhone() {
-            const drawer = document.getElementById('phone-drawer');
-            drawer.style.display = drawer.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function setWaypoint() {
-            alert('Waypoint set to Corporate HQ! Use controls to walk up to the Recruiter NPC near the glass building.');
-            togglePhone();
-        }
-
-        function movePlayer(dir) {
-            if (dir === 'forward') player.z -= 2;
-            if (dir === 'back') player.z += 2;
-            if (dir === 'left') player.x -= 2;
-            if (dir === 'right') player.x += 2;
-
-            if (character) {
-                character.position.x = player.x;
-                character.position.z = player.z;
-            }
-
-            // Check distance to NPC Recruiter for interview trigger (located at x: 5, z: -10)
-            const dist = Math.hypot(player.x - 5, player.z - (-10));
-            if (dist < 4) {
-                document.getElementById('interview-modal').style.display = 'block';
-            }
-        }
-
-        function submitInterview() {
-            const ans = document.getElementById('interview-ans').value;
-            if (ans === 'correct') {
-                alert('Interview Passed! You have been hired as Senior Mud Logger.');
-                player.cash += 3500;
-                player.rank = 'Mud Logger';
-                document.getElementById('hud-cash').innerText = `$${player.cash.toLocaleString()}`;
-                document.getElementById('interview-modal').style.display = 'none';
-            } else {
-                alert('Recruiter: "Incorrect technical knowledge. Come back when you study your reservoir geology!"');
-            }
-        }
-
-        function init3DOpenWorld() {
-            const container = document.getElementById('canvas-container');
-            const scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x0f172a);
-
-            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 15, 20);
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            container.appendChild(renderer.domElement);
-
-            // Lighting
-            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-            const sun = new THREE.DirectionalLight(0xf59e0b, 0.9);
-            sun.position.set(20, 40, 20);
-            scene.add(sun);
-
-            // Detailed Ground Roads & Blocks
-            const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
-            ground.rotation.x = -Math.PI / 2;
-            scene.add(ground);
-
-            // Styled Buildings (Corporate Towers)
-            const bMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3 });
-            for (let i = -40; i <= 40; i += 20) {
-                for (let j = -40; j <= 40; j += 20) {
-                    if (Math.abs(i) < 10 && Math.abs(j) < 10) continue;
-                    const b = new THREE.Mesh(new THREE.BoxGeometry(12, 25, 12), bMat);
-                    b.position.set(i, 12.5, j);
-                    scene.add(b);
-                }
-            }
-
-            // Target Corporate HQ Building
-            const hqMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.2 });
-            const hq = new THREE.Mesh(new THREE.BoxGeometry(14, 30, 14), hqMat);
-            hq.position.set(5, 15, -12);
-            scene.add(hq);
-
-            // Player Avatar (Realistic Character block with cap)
-            character = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 1.2), new THREE.MeshStandardMaterial({ color: 0xf59e0b }));
-            character.position.set(0, 1.1, 0);
-            scene.add(character);
-
-            // NPC Recruiter Standing outside HQ
-            npcRecruiter = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.2, 1.2), new THREE.MeshStandardMaterial({ color: 0x22c55e }));
-            npcRecruiter.position.set(5, 1.1, -8);
-            scene.add(npcRecruiter);
-
-            // Moving Car Model
-            const carMat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
-            car = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 4), carMat);
-            car.position.set(-10, 0.5, 5);
-            scene.add(car);
-
-            // Animation Loop (Drives car & rotates camera)
-            let carDir = 0.1;
-            function animate() {
-                requestAnimationFrame(animate);
-
-                // Move car back and forth across street
-                car.position.x += carDir;
-                if (car.position.x > 30 || car.position.x < -30) carDir *= -1;
-
-                // Smooth camera follow player
-                camera.position.x = player.x;
-                camera.position.z = player.z + 15;
-                camera.lookAt(player.x, 1, player.z);
-
-                renderer.render(scene, camera);
-            }
-            animate();
-        }
-    </script>
 </body>
 </html>
